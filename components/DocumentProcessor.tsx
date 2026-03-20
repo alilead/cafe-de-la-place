@@ -57,7 +57,7 @@ const NeuralLog: React.FC<{ doc: ProcessedDocument }> = ({ doc }) => {
     { label: 'Neural Buffer Ingestion', icon: Terminal, delay: '0s' },
     { label: 'Multi-Page Pattern Scan', icon: SearchCode, delay: '0.2s' },
     { label: 'OCR Extraction Logic', icon: Cpu, delay: '0.4s' },
-    { label: 'Semantic Fiduciary Mapping', icon: Landmark, delay: '0.6s' },
+    { label: 'Mappage semantique', icon: Landmark, delay: '0.6s' },
     { label: 'Integrity Rule Validation', icon: ShieldCheck, delay: '0.8s' },
   ];
 
@@ -547,7 +547,7 @@ const VerificationHub: React.FC<{
                    />
                 </div>
                 <div>
-                   <label className="text-[8px] font-black uppercase text-ypsom-slate tracking-widest block mb-2">Income (+)</label>
+                   <label className="text-[8px] font-black uppercase text-ypsom-slate tracking-widest block mb-2">Entree d'argent (+)</label>
                    <div className="relative">
                       <input 
                         type="number" 
@@ -559,7 +559,7 @@ const VerificationHub: React.FC<{
                    </div>
                 </div>
                 <div>
-                   <label className="text-[8px] font-black uppercase text-ypsom-slate tracking-widest block mb-2">Expense (-)</label>
+                   <label className="text-[8px] font-black uppercase text-ypsom-slate tracking-widest block mb-2">Sortie d'argent (-)</label>
                    <div className="relative">
                       <input 
                         type="number" 
@@ -758,7 +758,7 @@ const VerificationHub: React.FC<{
                         className={`w-full h-11 px-4 rounded-sm text-xs font-black outline-none transition-all ${isZeroValue ? 'bg-red-50 border-2 border-red-200 text-red-700' : 'bg-gray-50 border border-ypsom-alice'}`} 
                       />
                       {isZeroValue && (
-                        <div className="absolute -bottom-5 left-0 text-[8px] font-black text-red-600 uppercase tracking-widest animate-pulse">Critical Error: Fiduciary value cannot be zero</div>
+                        <div className="absolute -bottom-5 left-0 text-[8px] font-black text-red-600 uppercase tracking-widest animate-pulse">Erreur critique: la valeur ne peut pas etre nulle</div>
                       )}
                     </div>
                  </div>
@@ -1148,7 +1148,7 @@ export const DocumentProcessor: React.FC<{
           </div>
           <div className="p-5 border-t border-ypsom-alice bg-gray-50 flex flex-col sm:flex-row justify-between items-center gap-4">
              <div className="text-[9px] font-black text-ypsom-slate uppercase tracking-widest opacity-40">Certified Ledger • {stats.completed} Assets Reconciliation Complete</div>
-             <button onClick={() => exportToExcel(documents.map(d => d.data!).filter(Boolean), 'Ypsom_Certified', reportingCurrency)} className="w-full sm:w-auto h-10 px-8 bg-ypsom-deep text-white rounded-sm font-black text-[9px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-xl hover:bg-ypsom-shadow transition-all">
+             <button onClick={() => exportToExcel(documents.map(d => d.data!).filter(Boolean), 'CafeDeLaPlace_Certified', reportingCurrency)} className="w-full sm:w-auto h-10 px-8 bg-ypsom-deep text-white rounded-sm font-black text-[9px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-xl hover:bg-ypsom-shadow transition-all">
                 <FileSpreadsheet className="w-4 h-4" /> Export Ledger (XLSX)
              </button>
           </div>

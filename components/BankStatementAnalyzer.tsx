@@ -193,11 +193,11 @@ export const BankStatementAnalyzer: React.FC<BankStatementAnalyzerProps> = ({ su
                   <div className="space-y-6">
                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="bg-white p-4 rounded-sm border border-ypsom-alice shadow-sm">
-                           <span className="text-[9px] font-black text-ypsom-slate uppercase tracking-widest">Income</span>
+                           <span className="text-[9px] font-black text-ypsom-slate uppercase tracking-widest">Entrée d'argent</span>
                            <p className="text-lg font-bold text-green-700 font-mono">{summary.income.toFixed(2)}</p>
                         </div>
                         <div className="bg-white p-4 rounded-sm border border-ypsom-alice shadow-sm">
-                           <span className="text-[9px] font-black text-ypsom-slate uppercase tracking-widest">Expenses</span>
+                           <span className="text-[9px] font-black text-ypsom-slate uppercase tracking-widest">Sortie d'argent</span>
                            <p className="text-lg font-bold text-red-600 font-mono">{summary.expense.toFixed(2)}</p>
                         </div>
                         <div className="bg-ypsom-deep p-4 rounded-sm shadow-md">

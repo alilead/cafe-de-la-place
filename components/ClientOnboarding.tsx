@@ -29,7 +29,7 @@ export function ClientOnboarding() {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6">
         <div className="animate-pulse font-black text-ypsom-deep uppercase tracking-widest text-sm">
-          Loading clients…
+          Chargement des clients...
         </div>
       </div>
     );
@@ -44,10 +44,10 @@ export function ClientOnboarding() {
           </div>
           <div className="flex flex-col">
             <span className="font-black text-xl text-ypsom-deep tracking-wider leading-none">
-              YPSOM <span className="font-light">PARTNERS</span>
+              CAFE <span className="font-light">DE LA PLACE</span>
             </span>
             <span className="text-[0.6rem] tracking-[0.25em] text-ypsom-slate uppercase font-bold">
-              Select or add client
+              Selectionner ou ajouter un client
             </span>
           </div>
         </div>
@@ -84,7 +84,7 @@ export function ClientOnboarding() {
                 disabled={submitting || !newName.trim()}
                 className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-ypsom-deep text-white font-black text-[10px] uppercase tracking-widest rounded-sm hover:bg-ypsom-deep/90 disabled:opacity-60 transition-colors"
               >
-                <Plus className="w-4 h-4" /> Add
+                <Plus className="w-4 h-4" /> Ajouter
               </button>
             </div>
           </form>
@@ -92,7 +92,7 @@ export function ClientOnboarding() {
           {clients.length > 0 && (
             <>
               <p className="text-[10px] font-bold uppercase tracking-widest text-ypsom-slate mb-3">
-                Or select existing client
+                Ou selectionner un client existant
               </p>
               <ul className="space-y-1">
                 {clients.map((client) => (

@@ -72,7 +72,7 @@ const EvidenceModal: React.FC<{ doc: ProcessedDocument; onClose: () => void }> =
         
         <div className="p-10 space-y-8 bg-white">
              <div>
-                <h4 className="text-[11px] font-black uppercase tracking-widest text-ypsom-slate mb-6 border-b border-ypsom-alice pb-3">Fiduciary Metadata</h4>
+                <h4 className="text-[11px] font-black uppercase tracking-widest text-ypsom-slate mb-6 border-b border-ypsom-alice pb-3">Metadonnees de controle</h4>
                 <div className="space-y-5">
                    <div className="flex justify-between items-center">
                       <span className="text-[11px] font-bold text-ypsom-slate uppercase tracking-tight">Classification</span>
@@ -173,8 +173,24 @@ export const FinancialInsights: React.FC<FinancialInsightsProps> = ({ documents 
       }
     });
 
-    const income = flattenedItems.reduce((s, d) => s + (d.category.toLowerCase() === 'salary' ? d.amount : 0), 0);
-    const expense = flattenedItems.reduce((s, d) => s + (d.category.toLowerCase() !== 'salary' ? d.amount : 0), 0);
+    const isRevenueCategory = (category: string) => {
+      const c = (category || '').toLowerCase();
+      // Business rule:
+      // - Entree d'argent = ventes du restaurant + reservations
+      // - Sortie d'argent = factures, salaires/cotisations sociales, fournisseurs, etc.
+      // We classify revenues by category keywords coming from the AI.
+      return (
+        c.includes('restaurant') ||
+        c.includes('reservation') ||
+        c.includes('booking') ||
+        c.includes('depot') || // may appear in French bank/ATM labels
+        c.includes('bank deposit') ||
+        c.includes('caisse')
+      );
+    };
+
+    const income = flattenedItems.reduce((s, d) => s + (isRevenueCategory(d.category) ? d.amount : 0), 0);
+    const expense = flattenedItems.reduce((s, d) => s + (!isRevenueCategory(d.category) ? d.amount : 0), 0);
     
     const byCategory: Record<string, { total: number, items: typeof flattenedItems }> = {};
 
@@ -244,7 +260,7 @@ export const FinancialInsights: React.FC<FinancialInsightsProps> = ({ documents 
           <div className="bg-white p-6 rounded-sm border border-ypsom-alice shadow-sm flex flex-col justify-between">
              <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 bg-emerald-50 text-emerald-600 rounded-sm"><TrendingUp className="w-4 h-4" /></div>
-                <span className="text-[10px] font-black uppercase text-ypsom-slate tracking-widest">Total Audited Income</span>
+                <span className="text-[10px] font-black uppercase text-ypsom-slate tracking-widest">Entree d'argent</span>
              </div>
              <p className="text-xl font-black text-ypsom-deep font-mono leading-none">
                {stats.income.toLocaleString(undefined, { minimumFractionDigits: 2 })} <span className="text-xs opacity-40">CHF</span>
@@ -253,7 +269,7 @@ export const FinancialInsights: React.FC<FinancialInsightsProps> = ({ documents 
           <div className="bg-white p-6 rounded-sm border border-ypsom-alice shadow-sm flex flex-col justify-between">
              <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 bg-red-50 text-red-600 rounded-sm"><TrendingDown className="w-4 h-4" /></div>
-                <span className="text-[10px] font-black uppercase text-ypsom-slate tracking-widest">Total Audited Expenses</span>
+                <span className="text-[10px] font-black uppercase text-ypsom-slate tracking-widest">Sortie d'argent</span>
              </div>
              <p className="text-xl font-black text-ypsom-deep font-mono leading-none">
                {stats.expense.toLocaleString(undefined, { minimumFractionDigits: 2 })} <span className="text-xs opacity-40">CHF</span>
@@ -284,7 +300,7 @@ export const FinancialInsights: React.FC<FinancialInsightsProps> = ({ documents 
              </div>
              <div className="space-y-6">
                 {sortedCategories.map(([catName, data]) => {
-                  const catConfig = TAX_CATEGORIES.find(c => c.id === catName);
+    const catConfig = TAX_CATEGORIES.find(c => c.id === catName || c.label === catName);
                   const isExpanded = expandedCat === catName;
                   return (
                     <div key={catName} className="space-y-3">
@@ -339,7 +355,7 @@ export const FinancialInsights: React.FC<FinancialInsightsProps> = ({ documents 
                <div className="p-2.5 bg-ypsom-deep rounded-sm shadow-lg"><Sparkles className="w-5 h-5 text-white" /></div>
                <div>
                   <h3 className="text-[12px] font-black uppercase tracking-widest text-ypsom-deep">Forensic Neural Hub</h3>
-                  <p className="text-[9px] font-bold text-ypsom-slate uppercase tracking-[0.2em] mt-0.5">Ypsom Workforce Integration</p>
+                  <p className="text-[9px] font-bold text-ypsom-slate uppercase tracking-[0.2em] mt-0.5">Integration des donnees</p>
                </div>
              </div>
              <div className="flex items-center gap-2 px-4 py-2 bg-white border border-ypsom-alice rounded-sm shadow-sm">
@@ -372,7 +388,7 @@ export const FinancialInsights: React.FC<FinancialInsightsProps> = ({ documents 
                   </div>
                </div>
              ))}
-             {isAsking && <div className="p-5 bg-white border border-ypsom-alice rounded-sm inline-flex items-center gap-4 animate-pulse shadow-md"><Loader2 className="w-5 h-5 animate-spin text-ypsom-deep" /><span className="text-[11px] font-black uppercase tracking-widest text-ypsom-slate">Executing Fiduciary Neural Pass...</span></div>}
+             {isAsking && <div className="p-5 bg-white border border-ypsom-alice rounded-sm inline-flex items-center gap-4 animate-pulse shadow-md"><Loader2 className="w-5 h-5 animate-spin text-ypsom-deep" /><span className="text-[11px] font-black uppercase tracking-widest text-ypsom-slate">Execution de l'analyse...</span></div>}
           </div>
 
           <div className="p-8 bg-white border-t border-ypsom-alice">

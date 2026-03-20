@@ -4,7 +4,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ypsom Partners | Fiduciary Mission Control</title>
+    <title>Cafe de la Place | Suivi financier</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
     <style>
@@ -21,17 +21,17 @@
         background: transparent;
       }
       .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(27, 48, 65, 0.1);
+        background: rgba(0, 55, 221, 0.1);
         border-radius: 10px;
       }
       .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: rgba(27, 48, 65, 0.2);
+        background: rgba(0, 55, 221, 0.2);
       }
 
       @keyframes neural-pulse {
-        0% { box-shadow: 0 0 0 0 rgba(27, 48, 65, 0.4); }
-        70% { box-shadow: 0 0 0 15px rgba(27, 48, 65, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(27, 48, 65, 0); }
+        0% { box-shadow: 0 0 0 0 rgba(0, 55, 221, 0.4); }
+        70% { box-shadow: 0 0 0 15px rgba(0, 55, 221, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(0, 55, 221, 0); }
       }
       .neural-active {
         animation: neural-pulse 2s infinite;
@@ -43,11 +43,18 @@
           extend: {
             colors: {
               ypsom: {
-                shadow: '#121926',
-                deep: '#1B3041',
-                alice: '#E5EAF2',
-                slate: '#5F6D89',
-                darker: '#0B0F17',
+                shadow: '#132420',
+                deep: '#0037dd',
+                alice: '#f6f1ea',
+                slate: '#515151',
+                darker: '#152d30',
+              },
+              /* Override Tailwind amber to match the brand gold. */
+              amber: {
+                50: '#fdf6e9',
+                100: '#f4ead0',
+                600: '#b89d65',
+                700: '#ba9e64',
               }
             },
             boxShadow: {
@@ -71,7 +78,7 @@
 }
 </script>
 </head>
-  <body class="bg-[#F8FAFC] text-ypsom-darker overflow-x-hidden">
+  <body class="bg-white text-ypsom-darker overflow-x-hidden">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

@@ -1,5 +1,5 @@
 {
-  "name": "Ypsom Partners - Finance tool",
-  "description": "Ypsom Partners internal tool: Process financial documents into structured Excel reports and reconcile bank statements with supporting invoices.",
+  "name": "Cafe de la Place - Suivi financier",
+  "description": "Outil Cafe de la Place: traiter les documents financiers en rapports Excel structures et rapprocher les relevés bancaires avec les factures justificatives.",
   "requestFramePermissions": []
 }

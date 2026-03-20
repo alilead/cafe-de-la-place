@@ -40,10 +40,10 @@ export function Login() {
           </div>
           <div className="flex flex-col">
             <span className="font-black text-xl text-ypsom-deep tracking-wider leading-none">
-              YPSOM <span className="font-light">PARTNERS</span>
+                CAFE <span className="font-light">DE LA PLACE</span>
             </span>
             <span className="text-[0.6rem] tracking-[0.25em] text-ypsom-slate uppercase font-bold">
-              Fiduciary Mission Control
+                Suivi financier
             </span>
           </div>
         </div>
@@ -147,7 +147,7 @@ export function Login() {
         </div>
 
         <p className="mt-6 text-center text-[10px] text-ypsom-slate/70 uppercase tracking-widest">
-          Secure access • Your data stays yours
+          Acces sécurisé • Vos donnees restent a vous
         </p>
       </div>
     </div>
