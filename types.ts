@@ -7,6 +7,7 @@ export interface Client {
 
 export enum DocumentType {
   BANK_STATEMENT = 'Bank Statement',
+  PAY_SLIP = 'Pay Slip',
   INVOICE = 'Invoice',
   RECEIPT = 'Ticket/Receipt',
   Z2_BULK_REPORT = 'Z2 Multi-Ticket Sheet',
@@ -26,6 +27,26 @@ export interface BankTransaction {
   isHumanVerified?: boolean;
 }
 
+export interface PaySlipParty {
+  name: string;
+  idNumber?: string;
+  address?: string;
+}
+
+export interface PaySlipAnalysis {
+  employee: PaySlipParty;
+  employer: PaySlipParty;
+  payslipNumber?: string;
+  periodStart?: string;
+  periodEnd?: string;
+  payDate?: string;
+  currency?: string;
+  grossPay?: number;
+  netPay?: number;
+  // Components: earnings (INCOME) and deductions (EXPENSE)
+  components?: BankTransaction[];
+}
+
 export interface FinancialData {
   documentType: DocumentType;
   date: string;
@@ -41,6 +62,7 @@ export interface FinancialData {
   notes: string;
   lineItems?: BankTransaction[];
   subDocuments?: FinancialData[]; 
+  paySlip?: PaySlipAnalysis;
   forensicAlerts?: string[];
   groundingUrls?: string[];
   aiInterpretation?: string;

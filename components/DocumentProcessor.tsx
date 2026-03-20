@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { analyzeFinancialDocument, getLiveExchangeRate } from '../services/geminiService';
 import { exportToExcel } from '../services/excelService';
-import { ProcessedDocument, DocumentType, FinancialData, BankTransaction } from '../types';
+import { ProcessedDocument, DocumentType, FinancialData, BankTransaction, type PaySlipAnalysis } from '../types';
 
 export const TAX_CATEGORIES = [
   { id: 'Salary', label: 'Salary / Wages', icon: Wallet, color: 'text-emerald-600', bg: 'bg-emerald-50' },
@@ -205,6 +205,124 @@ const EditableAuditLedger: React.FC<{
   );
 };
 
+const EditablePaySlipLedger: React.FC<{
+  items: BankTransaction[];
+  currency: string;
+  onUpdate: (newItems: BankTransaction[]) => void;
+}> = ({ items, currency, onUpdate }) => {
+  const handleItemChange = (idx: number, field: keyof BankTransaction, value: any) => {
+    const next = [...items];
+    next[idx] = { ...next[idx], [field]: value, isHumanVerified: false };
+    onUpdate(next);
+  };
+
+  const toggleVerify = (idx: number) => {
+    const next = [...items];
+    next[idx] = { ...next[idx], isHumanVerified: !next[idx].isHumanVerified };
+    onUpdate(next);
+  };
+
+  return (
+    <div className="mt-8 space-y-4 animate-in fade-in duration-500">
+      <div className="flex items-center justify-between border-b border-ypsom-alice pb-3">
+        <div className="flex items-center gap-2">
+          <ListOrdered className="w-4 h-4 text-emerald-700" />
+          <h5 className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-ypsom-deep">
+            Pay Slip Components (Earnings / Deductions)
+          </h5>
+        </div>
+        <span className="text-[8px] sm:text-[9px] font-bold text-ypsom-slate opacity-40 uppercase tracking-widest">
+          Records: {items.length}
+        </span>
+      </div>
+
+      <div className="border border-ypsom-alice rounded-sm overflow-hidden bg-white shadow-sm overflow-x-auto">
+        <table className="min-w-full text-xs">
+          <thead className="bg-gray-50 border-b border-ypsom-alice">
+            <tr className="font-bold uppercase text-[8px] tracking-widest text-ypsom-slate">
+              <th className="px-2 py-3 text-center w-10">Verify</th>
+              <th className="px-2 py-3 text-left w-24">Date</th>
+              <th className="px-2 py-3 text-left min-w-[180px]">Component</th>
+              <th className="px-2 py-3 text-right w-28">Amount ({currency})</th>
+              <th className="px-2 py-3 text-center w-24">Type</th>
+              <th className="px-2 py-3 text-left min-w-[140px]">Category</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-ypsom-alice">
+            {items.map((item, idx) => (
+              <tr
+                key={idx}
+                className={`hover:bg-ypsom-alice/5 transition-colors ${item.isHumanVerified ? 'bg-emerald-50/20' : ''}`}
+              >
+                <td className="px-2 py-3 text-center">
+                  <button
+                    onClick={() => toggleVerify(idx)}
+                    className={`w-7 h-7 rounded-sm flex items-center justify-center transition-all ${
+                      item.isHumanVerified
+                        ? 'bg-emerald-600 text-white shadow-md'
+                        : 'bg-gray-100 text-gray-300 hover:text-emerald-600 border border-gray-200'
+                    }`}
+                  >
+                    <Check className={`w-3.5 h-3.5 ${item.isHumanVerified ? 'scale-110' : 'scale-90'}`} />
+                  </button>
+                </td>
+                <td className="px-2 py-3">
+                  <input
+                    type="date"
+                    value={item.date || ''}
+                    onChange={(e) => handleItemChange(idx, 'date', e.target.value)}
+                    className="w-full bg-transparent font-mono text-[10px] outline-none border-b border-transparent focus:border-ypsom-deep"
+                  />
+                </td>
+                <td className="px-2 py-3">
+                  <input
+                    value={item.description}
+                    onChange={(e) => handleItemChange(idx, 'description', e.target.value)}
+                    className="w-full bg-transparent font-bold text-ypsom-deep text-[10px] outline-none border-b border-transparent focus:border-ypsom-deep"
+                  />
+                </td>
+                <td className="px-2 py-3 text-right">
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={item.amount}
+                    onChange={(e) => handleItemChange(idx, 'amount', parseFloat(e.target.value) || 0)}
+                    className={`w-full bg-transparent text-right font-mono font-black text-[10px] outline-none border-b border-transparent focus:border-ypsom-deep ${
+                      item.type === 'INCOME' ? 'text-green-700' : 'text-red-700'
+                    }`}
+                  />
+                </td>
+                <td className="px-2 py-3 text-center">
+                  <select
+                    value={item.type}
+                    onChange={(e) => handleItemChange(idx, 'type', e.target.value)}
+                    className={`text-[7px] font-black uppercase rounded-full px-2 py-0.5 outline-none cursor-pointer ${
+                      item.type === 'INCOME'
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-red-100 text-red-700'
+                    }`}
+                  >
+                    <option value="INCOME">EARN</option>
+                    <option value="EXPENSE">DEDUCT</option>
+                  </select>
+                </td>
+                <td className="px-2 py-3">
+                  <input
+                    value={item.category ?? ''}
+                    onChange={(e) => handleItemChange(idx, 'category', e.target.value)}
+                    className="w-full bg-transparent font-bold text-[9px] text-ypsom-deep outline-none border-b border-transparent focus:border-ypsom-deep"
+                    placeholder="e.g. Tax, Insurance"
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
 const EditableZ2Ledger: React.FC<{ 
   subs: FinancialData[], 
   currency: string,
@@ -338,6 +456,37 @@ const VerificationHub: React.FC<{
       newData.amountInCHF = newTotal * rate;
       newData.conversionRateUsed = rate;
     }
+
+    // Pay slips: net pay is derived from earnings (INCOME) minus deductions (EXPENSE)
+    if (field === 'paySlip') {
+      const nextPaySlip: PaySlipAnalysis = value ?? { employee: { name: '' }, employer: { name: '' } };
+      const components = nextPaySlip.components ?? [];
+      const gross = components
+        .filter((c) => c.type === 'INCOME')
+        .reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
+      const deductions = components
+        .filter((c) => c.type === 'EXPENSE')
+        .reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
+      const net = gross - deductions;
+
+      const nextCurrency = nextPaySlip.currency || newData.originalCurrency || 'CHF';
+
+      newData.originalCurrency = nextCurrency;
+      newData.paySlip = {
+        ...nextPaySlip,
+        currency: nextCurrency,
+        grossPay: gross,
+        netPay: net,
+      };
+
+      newData.vatAmount = 0;
+      newData.netAmount = net;
+      newData.totalAmount = net;
+
+      const rate = await getLiveExchangeRate(nextCurrency || 'CHF', 'CHF');
+      newData.amountInCHF = net * rate;
+      newData.conversionRateUsed = rate;
+    }
     
     if (field === 'totalAmount' || field === 'originalCurrency') {
       const rate = await getLiveExchangeRate(newData.originalCurrency || 'CHF', 'CHF');
@@ -356,7 +505,13 @@ const VerificationHub: React.FC<{
   const editedData = doc.data!;
   const isBatch = editedData.documentType === 'Z2 Multi-Ticket Sheet' || (editedData.subDocuments && editedData.subDocuments.length > 1);
   const isBankStatement = editedData.documentType === DocumentType.BANK_STATEMENT;
+  const isPaySlip = editedData.documentType === DocumentType.PAY_SLIP;
   const isZeroValue = Number(editedData.totalAmount) === 0;
+  const currentPaySlip: PaySlipAnalysis = editedData.paySlip ?? { employee: { name: '' }, employer: { name: '' }, components: [] };
+  const paySlipComponents = currentPaySlip.components ?? [];
+  const computedGrossPay = paySlipComponents.filter((c) => c.type === 'INCOME').reduce((s, x) => s + (Number(x.amount) || 0), 0);
+  const computedDeductions = paySlipComponents.filter((c) => c.type === 'EXPENSE').reduce((s, x) => s + (Number(x.amount) || 0), 0);
+  const computedNetPay = computedGrossPay - computedDeductions;
 
   return (
     <div className="bg-white border-y border-ypsom-alice animate-in slide-in-from-top-2 duration-400 overflow-hidden shadow-inner">
@@ -427,6 +582,116 @@ const VerificationHub: React.FC<{
                       <ScaleIcon className="w-3 h-3 text-amber-600 absolute left-2 top-1/2 -translate-y-1/2" />
                    </div>
                 </div>
+             </div>
+           )}
+
+           {isPaySlip && (
+             <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 sm:gap-4 mb-8 p-4 sm:p-6 bg-indigo-50/70 rounded-sm border border-ypsom-alice shadow-sm">
+               <div className="lg:col-span-1">
+                 <label className="text-[8px] font-black uppercase text-ypsom-slate tracking-widest block mb-2">Employee Name</label>
+                 <input
+                   value={currentPaySlip.employee?.name ?? ''}
+                   onChange={(e) =>
+                     handleFieldChange('paySlip', {
+                       ...currentPaySlip,
+                       employee: { ...currentPaySlip.employee, name: e.target.value },
+                     })
+                   }
+                   className="w-full bg-white border border-ypsom-alice h-9 px-3 font-bold text-[10px] outline-none"
+                 />
+               </div>
+               <div>
+                 <label className="text-[8px] font-black uppercase text-ypsom-slate tracking-widest block mb-2">Employee ID</label>
+                 <input
+                   value={currentPaySlip.employee?.idNumber ?? ''}
+                   onChange={(e) =>
+                     handleFieldChange('paySlip', {
+                       ...currentPaySlip,
+                       employee: { ...currentPaySlip.employee, idNumber: e.target.value },
+                     })
+                   }
+                   className="w-full bg-white border border-ypsom-alice h-9 px-3 font-bold text-[10px] outline-none"
+                 />
+               </div>
+               <div className="lg:col-span-1">
+                 <label className="text-[8px] font-black uppercase text-ypsom-slate tracking-widest block mb-2">Employer Name</label>
+                 <input
+                   value={currentPaySlip.employer?.name ?? ''}
+                   onChange={(e) =>
+                     handleFieldChange('paySlip', {
+                       ...currentPaySlip,
+                       employer: { ...currentPaySlip.employer, name: e.target.value },
+                     })
+                   }
+                   className="w-full bg-white border border-ypsom-alice h-9 px-3 font-bold text-[10px] outline-none"
+                 />
+               </div>
+               <div className="lg:col-span-1">
+                 <label className="text-[8px] font-black uppercase text-ypsom-slate tracking-widest block mb-2">Employer Address</label>
+                 <input
+                   value={currentPaySlip.employer?.address ?? ''}
+                   onChange={(e) =>
+                     handleFieldChange('paySlip', {
+                       ...currentPaySlip,
+                       employer: { ...currentPaySlip.employer, address: e.target.value },
+                     })
+                   }
+                   className="w-full bg-white border border-ypsom-alice h-9 px-3 font-bold text-[10px] outline-none"
+                 />
+               </div>
+
+               <div>
+                 <label className="text-[8px] font-black uppercase text-ypsom-slate tracking-widest block mb-2">Period Start</label>
+                 <input
+                   type="date"
+                   value={currentPaySlip.periodStart ?? ''}
+                   onChange={(e) =>
+                     handleFieldChange('paySlip', { ...currentPaySlip, periodStart: e.target.value })
+                   }
+                   className="w-full bg-white border border-ypsom-alice h-9 px-3 font-mono text-[10px] outline-none"
+                 />
+               </div>
+               <div>
+                 <label className="text-[8px] font-black uppercase text-ypsom-slate tracking-widest block mb-2">Period End</label>
+                 <input
+                   type="date"
+                   value={currentPaySlip.periodEnd ?? ''}
+                   onChange={(e) =>
+                     handleFieldChange('paySlip', { ...currentPaySlip, periodEnd: e.target.value })
+                   }
+                   className="w-full bg-white border border-ypsom-alice h-9 px-3 font-mono text-[10px] outline-none"
+                 />
+               </div>
+               <div>
+                 <label className="text-[8px] font-black uppercase text-ypsom-slate tracking-widest block mb-2">Pay Date</label>
+                 <input
+                   type="date"
+                   value={currentPaySlip.payDate ?? ''}
+                   onChange={(e) =>
+                     handleFieldChange('paySlip', { ...currentPaySlip, payDate: e.target.value })
+                   }
+                   className="w-full bg-white border border-ypsom-alice h-9 px-3 font-mono text-[10px] outline-none"
+                 />
+               </div>
+
+               <div className="lg:col-span-1">
+                 <label className="text-[8px] font-black uppercase text-green-700 tracking-widest block mb-2">Gross Pay (Earnings)</label>
+                 <div className="w-full bg-white border border-green-200 h-9 px-3 flex items-center font-mono text-[10px] font-black text-green-800">
+                   {computedGrossPay.toFixed(2)} {editedData.originalCurrency || 'CHF'}
+                 </div>
+               </div>
+               <div className="lg:col-span-1">
+                 <label className="text-[8px] font-black uppercase text-red-700 tracking-widest block mb-2">Deductions</label>
+                 <div className="w-full bg-white border border-red-200 h-9 px-3 flex items-center font-mono text-[10px] font-black text-red-800">
+                   {computedDeductions.toFixed(2)} {editedData.originalCurrency || 'CHF'}
+                 </div>
+               </div>
+               <div className="lg:col-span-1">
+                 <label className="text-[8px] font-black uppercase text-amber-700 tracking-widest block mb-2">Net Pay (Received)</label>
+                 <div className="w-full bg-white border border-amber-200 h-9 px-3 flex items-center font-mono text-[10px] font-black text-ypsom-deep">
+                   {computedNetPay.toFixed(2)} {editedData.originalCurrency || 'CHF'}
+                 </div>
+               </div>
              </div>
            )}
 
@@ -577,23 +842,37 @@ const VerificationHub: React.FC<{
            </div>
 
            <div className="flex-1 overflow-y-auto mt-6 min-h-[300px] custom-scrollbar">
-              {editedData.subDocuments && editedData.subDocuments.length > 0 ? (
-                <EditableZ2Ledger 
-                  subs={editedData.subDocuments} 
-                  currency={editedData.originalCurrency} 
-                  onUpdate={newSubs => handleFieldChange('subDocuments', newSubs)} 
-                />
-              ) : (editedData.lineItems && editedData.lineItems.length > 0) ? (
-                <EditableAuditLedger 
-                  items={editedData.lineItems} 
-                  currency={editedData.originalCurrency} 
-                  onUpdate={newItems => handleFieldChange('lineItems', newItems)} 
-                />
-              ) : (
-                <div className="py-20 text-center border-2 border-dashed border-ypsom-alice rounded-sm bg-gray-50/30">
-                   <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-ypsom-slate opacity-30">No granular line-item data trace available</p>
-                </div>
-              )}
+             {isPaySlip ? (
+               <EditablePaySlipLedger
+                 items={currentPaySlip.components ?? []}
+                 currency={editedData.originalCurrency}
+                 onUpdate={(newComponents) =>
+                   handleFieldChange('paySlip', {
+                     ...currentPaySlip,
+                     currency: editedData.originalCurrency,
+                     components: newComponents,
+                   })
+                 }
+               />
+             ) : editedData.subDocuments && editedData.subDocuments.length > 0 ? (
+               <EditableZ2Ledger
+                 subs={editedData.subDocuments}
+                 currency={editedData.originalCurrency}
+                 onUpdate={(newSubs) => handleFieldChange('subDocuments', newSubs)}
+               />
+             ) : editedData.lineItems && editedData.lineItems.length > 0 ? (
+               <EditableAuditLedger
+                 items={editedData.lineItems}
+                 currency={editedData.originalCurrency}
+                 onUpdate={(newItems) => handleFieldChange('lineItems', newItems)}
+               />
+             ) : (
+               <div className="py-20 text-center border-2 border-dashed border-ypsom-alice rounded-sm bg-gray-50/30">
+                  <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-ypsom-slate opacity-30">
+                    No granular line-item data trace available
+                  </p>
+               </div>
+             )}
            </div>
            
            <div className="pt-6 border-t border-ypsom-alice mt-6">
