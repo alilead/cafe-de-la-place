@@ -145,6 +145,19 @@ export interface PaySlipAnalysis {
   components?: BankTransaction[];
 }
 
+export interface SubDocument {
+  issuer: string;
+  date: string;
+  totalAmount: number;
+  netAmount: number;
+  vatAmount: number;
+  vatRate: number;
+  originalCurrency: string;
+  documentType?: string;
+  expenseCategory: string;
+  pageRange?: string; // Page number(s) where this invoice appears
+}
+
 export interface FinancialData {
   documentType: DocumentType;
   date: string;
@@ -153,13 +166,14 @@ export interface FinancialData {
   totalAmount: number;
   originalCurrency: string;
   vatAmount: number;
+  vatRate?: number;
   netAmount: number;
   expenseCategory: string;
   amountInCHF: number;
   conversionRateUsed: number;
   notes: string;
   lineItems?: BankTransaction[];
-  subDocuments?: FinancialData[]; 
+  subDocuments?: SubDocument[]; // Changed from FinancialData[] to SubDocument[]
   paySlip?: PaySlipAnalysis;
   forensicAlerts?: string[];
   groundingUrls?: string[];

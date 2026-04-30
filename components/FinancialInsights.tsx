@@ -153,7 +153,7 @@ export const FinancialInsights: React.FC<FinancialInsightsProps> = ({ documents 
           flattenedItems.push({
             id: `${d.id}_sub_${idx}`,
             issuer: sub.issuer || 'Unknown Entity',
-            amount: sub.amountInCHF || sub.totalAmount || 0,
+            amount: sub.totalAmount || 0, // SubDocument doesn't have amountInCHF, use totalAmount
             category: sub.expenseCategory || d.data?.expenseCategory || 'Bank',
             parentDoc: d,
             type: sub.documentType || 'VOUCHER',

@@ -144,19 +144,22 @@ export const analyzeFinancialDocument = async (
         },
         subDocuments: {
           type: Type.ARRAY,
+          description: "For multi-page PDFs with multiple invoices/receipts, extract each as a separate sub-document",
           items: {
             type: Type.OBJECT,
             properties: {
-              issuer: { type: Type.STRING },
-              date: { type: Type.STRING },
-              totalAmount: { type: Type.NUMBER },
-              originalCurrency: { type: Type.STRING },
-              documentType: { type: Type.STRING, enum: ["VOUCHER", "TICKET/RECEIPT", "BANK_DEPOSIT"] },
-              expenseCategory: { type: Type.STRING },
-              vatAmount: { type: Type.NUMBER },
-              vatRate: { type: Type.NUMBER },
-              netAmount: { type: Type.NUMBER },
-            }
+              issuer: { type: Type.STRING, description: "Company/vendor name for this invoice" },
+              date: { type: Type.STRING, description: "Invoice date in YYYY-MM-DD format" },
+              totalAmount: { type: Type.NUMBER, description: "Total amount INCLUDING VAT" },
+              netAmount: { type: Type.NUMBER, description: "Amount BEFORE VAT. Set to totalAmount if VAT not found." },
+              vatAmount: { type: Type.NUMBER, description: "VAT/Tax amount. MUST be 0 if not found, never omit." },
+              vatRate: { type: Type.NUMBER, description: "VAT rate percentage. MUST be 0 if not found, never omit." },
+              originalCurrency: { type: Type.STRING, description: "Currency code (CHF, EUR, USD, etc.)" },
+              documentType: { type: Type.STRING, description: "Type of document" },
+              expenseCategory: { type: Type.STRING, description: "Expense category" },
+              pageRange: { type: Type.STRING, description: "Page number(s) where this invoice appears (e.g., '1', '2-3')" },
+            },
+            required: ["issuer", "date", "totalAmount", "netAmount", "vatAmount", "vatRate", "originalCurrency", "expenseCategory"]
           }
         }
       },
@@ -165,7 +168,7 @@ export const analyzeFinancialDocument = async (
 
     const hintSection = userHint ? `USER HINT: "${userHint}".` : "";
 
-    // Simplified, faster prompt
+    // Enhanced prompt for multi-page, multi-invoice extraction
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash', // Fast and current model
       contents: {
@@ -174,31 +177,55 @@ export const analyzeFinancialDocument = async (
           {
             text: `Extract financial data from this document. ${hintSection}
 
-CRITICAL RULES:
+🔴 CRITICAL MULTI-PAGE RULES:
+1. READ ALL PAGES from first to last - NEVER stop at page 1
+2. If this PDF contains MULTIPLE invoices/receipts, extract EACH ONE into the subDocuments array
+3. For EACH sub-document, you MUST extract ALL fields including:
+   - issuer (company/vendor name)
+   - date (YYYY-MM-DD)
+   - totalAmount (gross amount including VAT)
+   - netAmount (amount before VAT, or same as totalAmount if no VAT)
+   - vatAmount (MUST be 0 if not found, NEVER omit this field)
+   - vatRate (MUST be 0 if not found, NEVER omit this field)
+   - originalCurrency (CHF, EUR, USD, etc.)
+   - expenseCategory (SUPPLIERS, BILLS, PAYROLL, OTHER)
+   - pageRange (which page(s) this invoice is on)
+4. If VAT/TVA/Tax is not shown on an invoice, set vatAmount=0 and vatRate=0 (do NOT omit)
+5. Calculate netAmount = totalAmount - vatAmount (or netAmount = totalAmount if vatAmount=0)
+
+DOCUMENT TYPE DETECTION:
 1. Identify document type accurately
 2. Determine if this is INCOME (revenue, sales, deposits) or EXPENSE (bills, invoices to pay, purchases)
 3. For INCOME documents: Set expenseCategory to "REVENUE" or "SALES"
 4. For EXPENSE documents: Categorize specifically (e.g., "FOOD_SUPPLIES", "RENT", "UTILITIES")
+
+EXTRACTION RULES:
 5. Extract key financial data (amounts, dates, issuer)
 6. For bank statements: extract ALL transactions into lineItems
 7. For payslips: extract employee/employer info and components
 8. Extract VAT if shown (TVA, VAT, MwSt, Tax labels)
-9. For multi-document files: use subDocuments array
+9. For multi-document files: use subDocuments array with ALL invoices found
 
 INCOME vs EXPENSE Detection:
 - INCOME: Sales receipts, revenue reports, customer payments, deposits, Z-readings
 - EXPENSE: Supplier invoices, bills to pay, purchases, rent, utilities, salaries
 
-Return JSON only.`
+VAT EXTRACTION:
+- Look for: "TVA", "VAT", "MwSt", "Tax", "Taxe", "IVA"
+- Common rates: 8.1%, 7.7%, 2.5%, 20%, 19%
+- If not found: vatAmount=0, vatRate=0
+
+Return complete JSON with all fields populated.`
           }
         ]
       },
       config: {
         responseMimeType: "application/json",
         responseSchema: coreSchema,
-        temperature: 0.1, // Lower temperature for faster, more consistent results
+        temperature: 0.1, // Lower temperature for consistent extraction
         topP: 0.8,
         topK: 20,
+        maxOutputTokens: 8192, // Increased capacity for multi-page/multi-invoice PDFs
       }
     });
 
@@ -208,13 +235,52 @@ Return JSON only.`
     const parsed = JSON.parse(response.text) as FinancialData;
     console.log(`📊 Parsed data:`, parsed);
 
-    if (parsed.subDocuments && parsed.subDocuments.length > 0) {
-       const sum = parsed.subDocuments.reduce((s, doc) => s + (doc.totalAmount || 0), 0);
-       if (!parsed.totalAmount || parsed.totalAmount === 0) {
-          parsed.totalAmount = sum;
-       }
+    // Post-processing: Ensure VAT fields are never undefined
+    if (parsed.vatAmount === undefined || parsed.vatAmount === null) {
+      parsed.vatAmount = 0;
+    }
+    if (parsed.vatRate === undefined || parsed.vatRate === null) {
+      parsed.vatRate = 0;
     }
 
+    // Post-processing for subDocuments: ensure all required fields exist
+    if (parsed.subDocuments && parsed.subDocuments.length > 0) {
+      console.log(`📑 Found ${parsed.subDocuments.length} sub-documents`);
+      
+      parsed.subDocuments = parsed.subDocuments.map((subDoc, idx) => {
+        // Ensure VAT fields are never undefined
+        if (subDoc.vatAmount === undefined || subDoc.vatAmount === null) {
+          subDoc.vatAmount = 0;
+        }
+        if (subDoc.vatRate === undefined || subDoc.vatRate === null) {
+          subDoc.vatRate = 0;
+        }
+        
+        // Calculate netAmount if missing
+        if (!subDoc.netAmount && subDoc.totalAmount) {
+          subDoc.netAmount = subDoc.totalAmount - (subDoc.vatAmount || 0);
+        }
+        
+        // Ensure required fields have defaults
+        if (!subDoc.originalCurrency) {
+          subDoc.originalCurrency = parsed.originalCurrency || 'CHF';
+        }
+        if (!subDoc.expenseCategory) {
+          subDoc.expenseCategory = parsed.expenseCategory || 'OTHER';
+        }
+        
+        console.log(`  Sub-doc ${idx + 1}: ${subDoc.issuer} - ${subDoc.totalAmount} ${subDoc.originalCurrency} (VAT: ${subDoc.vatAmount})`);
+        return subDoc;
+      });
+      
+      // Update main totalAmount to sum of sub-documents if not set
+      const sum = parsed.subDocuments.reduce((s, doc) => s + (doc.totalAmount || 0), 0);
+      if (!parsed.totalAmount || parsed.totalAmount === 0) {
+        parsed.totalAmount = sum;
+      }
+    }
+
+    // Currency conversion
     if (parsed.totalAmount !== undefined && (!parsed.amountInCHF || parsed.amountInCHF === 0)) {
       const rate = await getLiveExchangeRate(parsed.originalCurrency || 'CHF', targetCurrency);
       parsed.amountInCHF = parsed.totalAmount * rate;
